@@ -12,3 +12,7 @@ test.py
 __pycache__
 .vscode
 .env
+
+backend/.cache
+backend/.audio
+backend/.slides
