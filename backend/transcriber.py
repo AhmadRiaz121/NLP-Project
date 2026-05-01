@@ -169,7 +169,6 @@
 #     return segments
 
 
-# Deepseek
 """
 transcriber.py — Whisper ASR + Speaker Diarisation (optional)
 Used only when USE_WHISPER=true in environment.

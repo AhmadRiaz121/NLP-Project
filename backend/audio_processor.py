@@ -222,7 +222,6 @@
 #     }
 
 
-# Deepseek
 """
 audio_processor.py — Audio Chunking for Real-Time Simulation
 Splits audio into timed segments and pairs with word-level timestamps for streaming.
