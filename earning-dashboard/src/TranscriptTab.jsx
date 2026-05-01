@@ -22,6 +22,7 @@ export default function TranscriptTab({ ticker, year, quarter }) {
   if (!data) return null;
 
   const { speakers, overall, sentiment_timeline } = data;
+  const overallConfidence = overall.avg_confidence_score ?? ((overall.avg_confidence_density || 0) * 100);
   const chartData = (sentiment_timeline || []).map((s, i) => ({ label: `S${i + 1}`, sentiment: s.sentiment }));
 
   return (
@@ -33,7 +34,7 @@ export default function TranscriptTab({ ticker, year, quarter }) {
           <MetricChip label="COMPOSITE SENTIMENT" value={overall.composite_sentiment >= 0 ? "+" : ""} unit={overall.composite_sentiment?.toFixed(3)} color={scoreToColor(overall.composite_sentiment || 0)} sub={overall.composite_label} />
           <MetricChip label="WEIGHTED SNR" value={overall.weighted_snr_db?.toFixed(1)} unit=" dB" color={snrToColor(overall.weighted_snr_db || 0)} sub={overall.weighted_snr_db > 8 ? "Strong signal quality" : "Moderate signal"} />
           <MetricChip label="AVG HEDGE" value={Math.round((overall.avg_hedge_density || 0) * 100)} unit="%" color={overall.avg_hedge_density > 0.05 ? T.red : T.green} sub={overall.avg_hedge_density > 0.05 ? "Elevated uncertainty" : "Normal range"} />
-          <MetricChip label="CONFIDENCE" value={Math.round((overall.avg_confidence_density || 0) * 100)} unit="%" color={overall.avg_confidence_density > 0.02 ? T.green : T.gold} />
+          <MetricChip label="CONFIDENCE" value={overallConfidence.toFixed(1)} unit="%" color={overallConfidence >= 55 ? T.green : overallConfidence >= 35 ? T.gold : T.red} sub={overallConfidence >= 55 ? "High conviction language" : overallConfidence >= 35 ? "Moderate conviction" : "Low conviction / cautious"} />
           <MetricChip label="TOTAL WORDS" value={overall.total_words?.toLocaleString()} color={T.cyan} />
           <MetricChip label="SPEAKERS" value={overall.total_speakers} color={T.cyan} />
         </div>

@@ -27,6 +27,8 @@ export default function RemarksTab({ ticker, year, quarter }) {
 
   const remarksChart = (remarks?.timeline || []).map((s, i) => ({ label: `R${i + 1}`, sentiment: s.sentiment }));
   const qaChart = (qa?.timeline || []).map((s, i) => ({ label: `Q${i + 1}`, sentiment: s.sentiment }));
+  const remarksConfidence = ra?.confidence?.confidence_score ?? ((ra?.confidence?.confidence_density || 0) * 100);
+  const qaConfidence = qaa?.confidence?.confidence_score ?? ((qaa?.confidence?.confidence_density || 0) * 100);
 
   const ComparisonCard = ({ label, remarksVal, qaVal, unit, colorFn }) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 16px", background: T.panel, border: `1px solid ${T.border}`, borderRadius: 6, flex: 1, minWidth: 140 }}>
@@ -52,7 +54,7 @@ export default function RemarksTab({ ticker, year, quarter }) {
         <ComparisonCard label="SENTIMENT" remarksVal={(ra?.sentiment?.score || 0).toFixed(3)} qaVal={(qaa?.sentiment?.score || 0).toFixed(3)} unit="" colorFn={v => scoreToColor(parseFloat(v))} />
         <ComparisonCard label="SNR (dB)" remarksVal={(ra?.snr?.snr_db || 0).toFixed(1)} qaVal={(qaa?.snr?.snr_db || 0).toFixed(1)} unit="" colorFn={v => snrToColor(parseFloat(v))} />
         <ComparisonCard label="HEDGE DENSITY" remarksVal={Math.round((ra?.hedging?.hedge_density || 0) * 100)} qaVal={Math.round((qaa?.hedging?.hedge_density || 0) * 100)} unit="%" colorFn={v => parseFloat(v) > 5 ? T.red : T.green} />
-        <ComparisonCard label="CONFIDENCE" remarksVal={Math.round((ra?.confidence?.confidence_density || 0) * 100)} qaVal={Math.round((qaa?.confidence?.confidence_density || 0) * 100)} unit="%" colorFn={v => parseFloat(v) > 2 ? T.green : T.gold} />
+        <ComparisonCard label="CONFIDENCE" remarksVal={remarksConfidence.toFixed(1)} qaVal={qaConfidence.toFixed(1)} unit="%" colorFn={v => parseFloat(v) >= 55 ? T.green : parseFloat(v) >= 35 ? T.gold : T.red} />
         <ComparisonCard label="SENTENCES" remarksVal={remarks?.sentence_count || 0} qaVal={qa?.sentence_count || 0} unit="" />
       </div>
 

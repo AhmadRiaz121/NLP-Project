@@ -4,10 +4,45 @@ Extracts text from PDF slide decks and analyzes them using Mistral-medium.
 """
 
 import os
+import json
 from typing import Dict, List
 from dotenv import load_dotenv
 
 load_dotenv()
+
+CACHE_DIR = os.path.join(os.path.dirname(__file__), ".cache")
+os.makedirs(CACHE_DIR, exist_ok=True)
+
+
+def _slide_cache_key(filepath: str) -> str:
+    """Cache key based on file path + last modified time + size."""
+    try:
+        stat = os.stat(filepath)
+        safe_name = os.path.basename(filepath).replace(".", "_")
+        return f"slides_analysis_{safe_name}_{int(stat.st_mtime)}_{stat.st_size}"
+    except Exception:
+        safe_name = os.path.basename(filepath).replace(".", "_")
+        return f"slides_analysis_{safe_name}"
+
+
+def _get_cached_slide_analysis(cache_key: str) -> Dict:
+    cache_path = os.path.join(CACHE_DIR, f"{cache_key}.json")
+    if not os.path.exists(cache_path):
+        return {}
+    try:
+        with open(cache_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _set_cached_slide_analysis(cache_key: str, data: Dict) -> None:
+    cache_path = os.path.join(CACHE_DIR, f"{cache_key}.json")
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+    except Exception as e:
+        print(f"[slides] cache write error: {e}")
 
 
 def _extract_pdf_text_with_pypdf(filepath: str) -> str:
@@ -222,14 +257,25 @@ def analyze_slide_deck(filepath: str, company_name: str, quarter: str) -> Dict:
     if not filepath or not os.path.exists(filepath):
         return {"status": "no_file", "analysis": "Slide deck file not found."}
 
+    cache_key = _slide_cache_key(filepath)
+    cached = _get_cached_slide_analysis(cache_key)
+    if cached:
+        cached["cached"] = True
+        return cached
+
     pdf_text = extract_pdf_text(filepath)
     if not pdf_text:
-        return {
+        result = {
             "status": "empty",
             "analysis": (
                 "Could not extract text from slide deck PDF. "
                 "This file may be image-based and OCR was unavailable."
             ),
         }
+        _set_cached_slide_analysis(cache_key, result)
+        return result
 
-    return analyze_slides_with_mistral(pdf_text, company_name, quarter)
+    result = analyze_slides_with_mistral(pdf_text, company_name, quarter)
+    result["cached"] = False
+    _set_cached_slide_analysis(cache_key, result)
+    return result

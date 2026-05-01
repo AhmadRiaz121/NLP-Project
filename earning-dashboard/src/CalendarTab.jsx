@@ -35,7 +35,7 @@ export default function CalendarTab() {
         <div style={{ textAlign: "center", padding: 40, fontFamily: T.fontUI, fontSize: 13, color: T.muted }}>No earnings events found for this date.</div>
       ) : (
         <Panel title={`EARNINGS EVENTS — ${dateStr}`}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "65vh", overflowY: "auto", paddingRight: 4 }}>
             {events.map((ev, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 16, padding: "10px 14px", background: T.panel, border: `1px solid ${T.border}`, borderRadius: 6 }}>
                 <div style={{ flex: 1 }}>

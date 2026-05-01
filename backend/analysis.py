@@ -194,7 +194,7 @@ def detect_hedging(text: str) -> Dict:
 
 
 def detect_confidence(text: str) -> Dict:
-    """Detect confidence/definitive language."""
+    """Detect confidence/definitive language and return a normalized confidence score."""
     text_lower = text.lower()
     words = text_lower.split()
     word_count = max(len(words), 1)
@@ -206,11 +206,24 @@ def detect_confidence(text: str) -> Dict:
             confidence_found.extend([cw] * count)
 
     confidence_density = len(confidence_found) / word_count
+    assertive_patterns = [
+        "we will", "we are confident", "we remain confident", "we continue to",
+        "on track", "strong demand", "strong execution", "we delivered",
+        "ahead of", "we expect to", "we're pleased", "record",
+    ]
+    assertive_hits = sum(text_lower.count(p) for p in assertive_patterns)
+
+    # Convert sparse lexical signals into a more interpretable 0-100 score.
+    lexical_signal = min(1.0, confidence_density * 40.0)
+    assertive_signal = min(1.0, assertive_hits / 6.0)
+    confidence_score = (0.65 * lexical_signal + 0.35 * assertive_signal) * 100.0
 
     return {
         "confidence_word_count": len(confidence_found),
         "confidence_words": list(set(confidence_found)),
         "confidence_density": round(confidence_density, 4),
+        "assertive_phrase_count": int(assertive_hits),
+        "confidence_score": round(confidence_score, 2),
     }
 
 
@@ -420,12 +433,14 @@ def compute_overall_metrics(speaker_results: List[Dict]) -> Dict:
     all_snrs = [r["snr"]["snr_db"] for r in speaker_results]
     all_hedge = [r["hedging"]["hedge_density"] for r in speaker_results]
     all_confidence = [r["confidence"]["confidence_density"] for r in speaker_results]
+    all_confidence_scores = [r["confidence"].get("confidence_score", 0) for r in speaker_results]
     total_words = sum(r["word_count"] for r in speaker_results)
 
     composite_sentiment = np.mean(all_scores) if all_scores else 0.0
     avg_snr = np.mean(all_snrs) if all_snrs else 0.0
     avg_hedge = np.mean(all_hedge) if all_hedge else 0.0
     avg_confidence = np.mean(all_confidence) if all_confidence else 0.0
+    avg_confidence_score = np.mean(all_confidence_scores) if all_confidence_scores else 0.0
 
     # Weighted SNR (by word count)
     weighted_snr = sum(
@@ -445,6 +460,7 @@ def compute_overall_metrics(speaker_results: List[Dict]) -> Dict:
         "weighted_snr_db": round(float(weighted_snr), 2),
         "avg_hedge_density": round(float(avg_hedge), 4),
         "avg_confidence_density": round(float(avg_confidence), 4),
+        "avg_confidence_score": round(float(avg_confidence_score), 2),
         "total_words": total_words,
         "total_speakers": len(speaker_results),
     }

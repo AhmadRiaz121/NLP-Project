@@ -72,7 +72,7 @@ export default function AudioTab({ ticker, year, quarter }) {
           (data?.hesitations?.hesitation_density || 0) > 0.04
         ) {
           setAlerts(prev => [
-            ...prev.slice(-15),
+            ...prev.slice(-119),
             {
               time: label,
               type: (data?.sentiment?.score || 0) < -0.6 ? "negative-tone" : (data?.hedging?.hedge_density || 0) > 0.08 ? "high-hedge" : "high-hesitation",
@@ -255,7 +255,7 @@ export default function AudioTab({ ticker, year, quarter }) {
           </div>
 
           {/* Right: SNR + Gauges */}
-          <div style={{ width: 200, borderLeft: `1px solid ${T.border}`, display: "flex", flexDirection: "column", background: T.surface, flexShrink: 0, padding: "16px 12px", gap: 16, alignItems: "center" }}>
+          <div style={{ width: 200, borderLeft: `1px solid ${T.border}`, display: "flex", flexDirection: "column", background: T.surface, flexShrink: 0, padding: "16px 12px", gap: 16, alignItems: "stretch", overflowY: "auto" }}>
             <SNRGauge value={cumulative.avg_snr_db} label="AVG CONTENT SNR" />
             <div style={{ width: "100%", height: 1, background: T.border }} />
             <HedgeGauge value={cumulative.avg_hedge_density} />
@@ -266,8 +266,8 @@ export default function AudioTab({ ticker, year, quarter }) {
             {!!alerts.length && (
               <div style={{ width: "100%", marginTop: 8 }}>
                 <div style={{ fontFamily: T.fontMono, fontSize: 10, color: T.red, marginBottom: 6 }}>EVENT ALERTS</div>
-                <div style={{ maxHeight: 180, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
-                  {alerts.slice(-8).map((a, i) => (
+                <div style={{ maxHeight: 300, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, paddingRight: 2 }}>
+                  {alerts.map((a, i) => (
                     <div key={i} style={{ padding: "6px 8px", border: `1px solid ${T.redDim}`, background: `${T.red}12`, borderRadius: 6 }}>
                       <div style={{ fontFamily: T.fontMono, fontSize: 10, color: T.red }}>{a.time} · {a.type}</div>
                       <div style={{ fontFamily: T.fontUI, fontSize: 11, color: T.muted }}>{a.text}</div>
